@@ -1,0 +1,58 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+    <Script file="MythicPlusGroupOrganizer.lua"/>
+    <!-- Define your UI elements here -->
+    <Frame name="MythicPlusGroupOrganizerFrame" enableMouse="true" parent="UIParent" hidden="false" inherits="BackdropTemplate">
+        <Size>
+            <AbsDimension x="1200" y="800"/> <!-- Increased width to accommodate new frame -->
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+        <Scripts>
+            <OnMouseDown>
+                MythicPlusGroupOrganizerFrame_OnMouseDown(self, button)
+            </OnMouseDown>
+            <OnMouseUp>
+                MythicPlusGroupOrganizerFrame_OnMouseUp(self, button)
+            </OnMouseUp>
+            <OnSizeChanged>
+                AdjustGuildmatesListFrameSize()
+            </OnSizeChanged>
+        </Scripts>
+        <Frames>
+            <Frame name="GuildmatesListFrame" inherits="BackdropTemplate">
+                <Size>
+                    <AbsDimension x="200" y="780"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="10" y="-10"/>
+                </Anchors>
+            </Frame>
+            <Frame name="MPGOGroupsFrame" inherits="BackdropTemplate" enableMouse="true">
+                <Size>
+                    <AbsDimension x="400" y="50"/> <!-- Adjusted size to fit horizontally -->
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="GuildmatesListFrame" relativePoint="TOPRIGHT" x="10" y="0"/>
+                </Anchors>
+                <Frames>
+                </Frames>
+            </Frame>
+            <Frame name="MPGORowTemplate" hidden="true" inherits="BackdropTemplate">
+                <Size>
+                    <AbsDimension x="500" y="50"/>
+                </Size>
+            </Frame>
+            <Button name="MPGOCloseButton" inherits="UIPanelCloseButton">
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="-5" y="-5"/>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        MythicPlusGroupOrganizerFrame:Hide()
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Frame>
+</Ui>

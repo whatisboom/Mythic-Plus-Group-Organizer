@@ -1,0 +1,8 @@
+## Interface: 11007
+## Title: Mythic Plus Group Organizer
+## Notes: Helps organize and manage Mythic Plus groups.
+## Author: whatisboom
+## Version: 1.0.0
+
+
+MythicPlusGroupOrganizer.xml
