@@ -28,7 +28,7 @@
                     <Anchor point="TOPLEFT" x="10" y="-10"/>
                 </Anchors>
             </Frame>
-            <Frame name="MPGOGroupsFrame" inherits="BackdropTemplate" enableMouse="true">
+            <Frame name="MPGOGroupsFrame" inherits="BackdropTemplate">
                 <Size>
                     <AbsDimension x="400" y="50"/> <!-- Adjusted size to fit horizontally -->
                 </Size>

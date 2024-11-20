@@ -144,7 +144,7 @@ function PopulateGuildmatesList()
 
     for i = 1, numGuildMembers do
         local name, _, _, level, _, _, _, _, online = GetGuildRosterInfo(i)
-        if online and level == maxLevel and not IsPlayerInMPGOGroups(name) and not IsPlayerInRowGroupSlot(name) then
+        if online and level == maxLevel and not IsPlayerInMPGOGroups(name) then
             local role = GetPlayerRole(name)
             table.insert(guildmates, { name = name, role = role })
         end
@@ -174,9 +174,16 @@ function PopulateGuildmatesList()
 
     local index = 1
     for _, guildmateInfo in ipairs(guildmates) do
-        local guildmate = CreateFrame("Frame", nil, scrollChild)
+        local guildmate = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
         guildmate:SetSize(180, 20)
         guildmate:SetPoint("TOPLEFT", 10, -20 * (index - 1))
+        guildmate:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true, tileSize = 16, edgeSize = 16,
+            insets = { left = 4, right = 4, top = 4, bottom = 4 }
+        })
+        guildmate:SetBackdropColor(1, 0, 0, 0.5) -- Set red background with 50% opacity
 
         local roleIcon = guildmate:CreateTexture(nil, "OVERLAY")
         roleIcon:SetSize(16, 16)
@@ -217,7 +224,7 @@ function PopulateGuildmatesList()
     end
 end
 
--- IsPlayerInMPGOGroups: Checks if a player is already in one of the group slots.
+-- IsPlayerInMPGOGroups: Checks if a player is already in one of the group row.
 -- Returns true if the player is found, false otherwise.
 function IsPlayerInMPGOGroups(playerName)
     local mpgogroupsFrame = _G["MPGOGroupsFrame"]
@@ -235,27 +242,6 @@ function IsPlayerInMPGOGroups(playerName)
     return false
 end
 
--- IsPlayerInRowGroupSlot: Checks if a player is already attached to a row group slot frame.
--- Returns true if the player is found, false otherwise.
-function IsPlayerInRowGroupSlot(playerName)
-    local mpgogroupsFrame = _G["MPGOGroupsFrame"]
-    if not mpgogroupsFrame then return false end
-
-    for i = 1, mpgogroupsFrame:GetNumChildren() do
-        local row = select(i, mpgogroupsFrame:GetChildren())
-        for j = 1, row:GetNumChildren() do
-            local slot = select(j, row:GetChildren())
-            if slot:GetChildren() then
-                local child = select(1, slot:GetChildren())
-                if child and child.text and child.text:GetText() == playerName then
-                    return true
-                end
-            end
-        end
-    end
-    return false
-end
-
 -- CheckDropTarget: Checks if the frame is being dropped over a valid group slot.
 -- If so, attaches the frame to the slot and returns true. Otherwise, returns false.
 function CheckDropTarget(frame)
@@ -266,16 +252,18 @@ function CheckDropTarget(frame)
             if MouseIsOver(row) then
                 print("Mouse is over row " .. i)
                 row:GetScript("OnReceiveDrag")(row)
+                frame:ClearAllPoints()
                 local numChildren = row:GetNumChildren()
                 local totalWidth = row:GetWidth()
-                local spacing = (totalWidth - (numChildren * frame:GetWidth())) / (numChildren + 1)
+                local widthForChild = totalWidth / 5
+                local margin = 10
                 if numChildren == 0 then
-                    frame:SetPoint("LEFT", row, "LEFT", spacing, 0)
+                    frame:SetPoint("LEFT", row, "LEFT", margin, 0)
                 else
-                    frame:SetPoint("LEFT", row, "LEFT", spacing * numChildren, 0)
+                    frame:SetPoint("LEFT", row, "LEFT", widthForChild + margin * numChildren, 0)
                 end
                 frame:SetParent(row)
-                frame:ClearAllPoints()
+                frame:Show()
                 return true
             end
         end
@@ -313,7 +301,6 @@ end
 
 -- CreateNewRowOfMPGOGroups: Creates a new row of group slots.
 -- Each row contains 5 slots, and the row is positioned below the previous row.
--- Ensures the slots are not draggable.
 function CreateNewRowOfMPGOGroups()
     local mpgogroupsFrame = _G["MPGOGroupsFrame"]
     if not mpgogroupsFrame then return end
@@ -337,21 +324,24 @@ function CreateNewRowOfMPGOGroups()
     newRow:Show()
 
     newRow:SetScript("OnReceiveDrag", function(self)
-        print("OnReceiveDrag called for row " .. rowNumber)
+        print("OnReceiveDrag called for " .. self:GetName() .. " on row " .. rowNumber)
         local numChildren = self:GetNumChildren()
-        local totalWidth = newRow:GetWidth()
-        local spacing = (totalWidth - (numChildren * 100)) / (numChildren + 1)
+        print("Num children: " .. numChildren)
+        local totalWidth = self:GetWidth()
+        print("Total width: " .. totalWidth)
+        local spacing = (totalWidth - (numChildren * 10)) / (numChildren + 1) 
+        print("Spacing: " .. spacing)
         local frame = addonTable.draggedFrame
         if frame then
             print("Dragged frame: " .. frame.text:GetText())
-            print("Setting Parent to " .. newRow:GetName())
-            frame:SetParent(newRow)
+            print("Setting Parent to " .. self:GetName())
+            frame:SetParent(self)
             print("Parent set to " .. frame:GetParent():GetName())
-            frame:ClearAllPoints()
-            frame:SetPoint("LEFT", newRow, "LEFT", spacing * (numChildren + 1), 0)
-            print("Set point to " .. frame:GetPoint())
-            frame:Show() -- Ensure the frame is visible
-            print("Frame shown: " .. tostring(frame:IsShown()))
+            -- frame:ClearAllPoints()
+            -- frame:SetPoint("LEFT", self, "LEFT", spacing * numChildren, 0)
+            -- print("Set point to " .. frame:GetPoint(1))
+            -- frame:Show() -- Ensure the frame is visible
+            -- print("Frame shown: " .. tostring(frame:IsShown()))
             addonTable.draggedFrame = nil
         else
             print("No dragged frame found")
