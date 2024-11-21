@@ -69,7 +69,7 @@
                             <Anchor point="LEFT" x="10" y="0"/>
                         </Anchors>
                     </Button>
-                    <Button name="PlaceholderButton2" inherits="UIPanelButtonTemplate" text="Enable Debug Mode">
+                    <Button name="PlaceholderButton2" inherits="UIPanelButtonTemplate" text="Unset">
                         <Size>
                             <AbsDimension x="100" y="30"/>
                         </Size>

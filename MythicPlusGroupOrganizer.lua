@@ -11,7 +11,7 @@ local addonName, addonTable = ...
 RaiderIO = RaiderIO
 
 -- configs
-local MPGOIsDebugMode = false
+local MPGOIsDebugMode = true
 local MPGODebugLevels = {
     Info = 0,
     Warning = 1,
@@ -252,6 +252,7 @@ function PopulateGuildmembersList()
         local name, _, _, level, class, _, _, _, online = GetGuildRosterInfo(i)
         if online and level == maxLevel and not IsPlayerInMPGOGroups(name) then
             local role = GetPlayerRole(name)
+            MPGODebug(name .. " is a " .. role, MPGODebugLevels.Info)
             table.insert(guildmates, { name = name, role = role, class = class })
         end
     end
@@ -267,15 +268,15 @@ function PopulateGuildmembersList()
     end)
 
     local roleIcons = {
-        TANK = "Interface\\Addons\\Mythic Plus Group Organizer\\UI-LFG-ICON-PORTRAITROLES",
-        HEALER = "Interface\\Addons\\Mythic Plus Group Organizer\\UI-LFG-ICON-PORTRAITROLES",
-        DPS = "Interface\\Addons\\Mythic Plus Group Organizer\\UI-LFG-ICON-PORTRAITROLES"
+        TANK = "Interface\\Addons\\Mythic Plus Group Organizer\\textures\\UI-LFG-ICON-PORTRAITROLES-CROPPED",
+        HEALER = "Interface\\Addons\\Mythic Plus Group Organizer\\textures\\UI-LFG-ICON-PORTRAITROLES-CROPPED",
+        DPS = "Interface\\Addons\\Mythic Plus Group Organizer\\textures\\UI-LFG-ICON-PORTRAITROLES-CROPPED"
     }
 
     local roleCoords = {
-        TANK = { 0, 0.296875, 0.015625, 0.3125 },
-        HEALER = { 0.296875, 0.59375, 0.015625, 0.3125 },
-        DPS = { 0.59375, 0.890625, 0.015625, 0.3125 }
+        TANK = { 0, 0.5, 0.5, 1 },
+        HEALER = { 0.5, 1, 0, 0.5 },
+        DPS = { 0.5, 1, 0.5, 1 }
     }
 
     local index = 1
@@ -302,10 +303,12 @@ function PopulateGuildmembersList()
         guildmate.texture:SetColorTexture(backgroundColor.red, backgroundColor.green, backgroundColor.blue, guildmadeFrameOpacity) -- Set black background with 50% opacity
 
         local roleIcon = guildmate:CreateTexture(nil, "OVERLAY")
-        roleIcon:SetSize(16, 16)
-        roleIcon:SetPoint("LEFT")
+        roleIcon:SetSize(20, 20)
+        -- roleIcon:SetAllPoints()
+        roleIcon:SetPoint("LEFT", guildmate, "LEFT", 3, 0)
         roleIcon:SetTexture(roleIcons[guildmateInfo.role])
         roleIcon:SetTexCoord(unpack(roleCoords[guildmateInfo.role]))
+        roleIcon:Show()
 
         guildmate.text = guildmate:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         guildmate.text:SetPoint("LEFT", roleIcon, "RIGHT", 5, 0)
@@ -519,7 +522,7 @@ end
 function GetPlayerRole(playerName)
     -- Implement logic to determine the player's role (e.g., Tank, Healer, DPS)
     -- This is a placeholder implementation and should be replaced with actual logic
-    return "DPS"
+    return GetPlayerMythicPlusRole(playerName)
 end
 
 -- GetPlayerMythicPlusRating: Retrieves the player's Mythic Plus rating from the RaiderIO addon.
@@ -530,14 +533,37 @@ function GetPlayerMythicPlusRating(playerNameAndRealm)
     end
 
     local playerName, realm = strsplit("-", playerNameAndRealm)
-    MPGODebug("Getting RaiderIO profile for " .. playerName .. " on realm " .. realm, MPGODebugLevels.Info)
+    MPGODebug("Getting RaiderIO score for " .. playerName .. " on realm " .. realm, MPGODebugLevels.Info)
 
     local profile = RaiderIO.GetProfile(playerName, realm)
     if profile then
-        return profile.mythicKeystoneProfile.currentScore or 0
+        local score = profile.mythicKeystoneProfile.currentScore
+        MPGODebug("Score for " .. playerName .. ": " .. score, MPGODebugLevels.Info)
+        return score or 0
     else
         MPGODebug("No RaiderIO profile found for " .. playerName, MPGODebugLevels.Warning)
         return 0
+    end
+end
+
+function GetPlayerMythicPlusRole(playerNameAndRealm)
+    if not RaiderIO then
+        MPGODebug("RaiderIO addon is not installed.", MPGODebugLevels.Warning)
+        return "DPS"
+    end
+
+    local playerName, realm = strsplit("-", playerNameAndRealm)
+    MPGODebug("Getting RaiderIO role for " .. playerName .. " on realm " .. realm, MPGODebugLevels.Info)
+
+    local profile = RaiderIO.GetProfile(playerName, realm)
+    if profile then
+        MPGODebug("Profile for " .. playerName .. " found", MPGODebugLevels.Info)
+        local role = string.upper(profile.mythicKeystoneProfile.mplusCurrent.roles[1][1]) or "DPS"
+        MPGODebug("Role for " .. playerName .. ": " .. role, MPGODebugLevels.Info)
+        return role
+    else
+        MPGODebug("No RaiderIO profile found for " .. playerName, MPGODebugLevels.Warning)
+        return "DPS"
     end
 end
 
@@ -587,7 +613,7 @@ end
 
 function MPGODebug( msg, level)
 
-    if MPGOIsDebugMode and level >= MPGODebugLevel then
+    if MPGOIsDebugMode and level >= MPGODebugLevel or level == MPGODebugLevels.Critical or not level then
         local DebugColors = {
             [0] = {1, 1, 1},    -- White
             [1] = {1, 1, 0},    -- Yellow
@@ -617,4 +643,20 @@ function ResetGuildMemberFrames()
 
     -- Repopulate the guild list frame
     PopulateGuildmembersList()
+end
+
+function MPGODump(value, indent)
+    indent = indent or ""
+    if type(value) == "table" then
+        for k, v in pairs(value) do
+            if type(v) == "table" then
+                print(indent .. tostring(k) .. ":")
+                MPGODump(v, indent .. "  ")
+            else
+                print(indent .. tostring(k) .. ": " .. tostring(v))
+            end
+        end
+    else
+        print(indent .. tostring(value))
+    end
 end
