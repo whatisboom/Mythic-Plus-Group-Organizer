@@ -66,6 +66,16 @@ function InitializeFrames()
             tile = true, tileSize = 16, edgeSize = 16,
             insets = { left = 0, right = 0, top = 0, bottom = 0 }
         })
+
+        -- Add key binding to close the window when the escape key is pressed
+        frame:SetPropagateKeyboardInput(true)
+        frame:SetScript("OnKeyDown", function(self, key)
+            if key == "ESCAPE" then
+                self:Hide()
+            else
+                self:SetPropagateKeyboardInput(true)
+            end
+        end)
     end
 
     local guildmatesListFrame = _G["GuildmatesListFrame"]
@@ -82,7 +92,7 @@ function InitializeFrames()
         scrollFrame:SetPoint("TOPLEFT", 10, -10)
 
         local scrollChild = CreateFrame("Frame", "GuildmatesScrollChildFrame", scrollFrame)
-        scrollChild:SetSize(180, 280)
+        scrollChild:SetSize(180, guildmatesListFrame:GetHeight() - 20)
         scrollFrame:SetScrollChild(scrollChild)
     end
 
@@ -100,12 +110,26 @@ end
 function AdjustGuildmatesListFrameSize()
     local frame = _G["MythicPlusGroupOrganizerFrame"]
     local guildmatesListFrame = _G["GuildmatesListFrame"]
+    local guildmatesScrollFrame = _G["GuildmatesScrollFrame"]
     local mpgogroupsFrame = _G["MPGOGroupsFrame"]
-    if frame and guildmatesListFrame and mpgogroupsFrame then
+    if frame and guildmatesListFrame and mpgogroupsFrame and guildmatesScrollFrame then
         local frameHeight = frame:GetHeight()
         local frameWidth = frame:GetWidth()
         guildmatesListFrame:SetHeight(frameHeight - 20) -- Maintain a vertical offset of 10 from the top and bottom
+        guildmatesScrollFrame:SetHeight(guildmatesListFrame:GetHeight() - 20)
         mpgogroupsFrame:SetSize(frameWidth - guildmatesListFrame:GetWidth() - 30, frameHeight - 20) -- Maintain a padding of 10
+
+        -- Adjust the size of each row and contained guild member frames
+        for i = 1, mpgogroupsFrame:GetNumChildren() do
+            local row = select(i, mpgogroupsFrame:GetChildren())
+            row:SetWidth(mpgogroupsFrame:GetWidth() - 20) -- Set row width with a margin of 10 on each side
+            for j = 1, row:GetNumChildren() do
+                local guildmemberFrame = select(j, row:GetChildren())
+                local left = row:GetWidth() * 0.2
+                guildmemberFrame:SetWidth(left) -- Set guild member frame width to 20% of row width
+                guildmemberFrame:SetPoint("LEFT", row, "LEFT", left * (j-1), 0) -- Align guild member frame to the left of the row
+            end
+        end
     end
 end
 
@@ -175,8 +199,9 @@ function PopulateGuildmatesList()
     local index = 1
     for _, guildmateInfo in ipairs(guildmates) do
         local guildmate = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-        guildmate:SetSize(180, 20)
-        guildmate:SetPoint("TOPLEFT", 10, -20 * (index - 1))
+        local guildmadeFrameHeight = 40
+        guildmate:SetSize(scrollChild:GetWidth() - 20, guildmadeFrameHeight)
+        guildmate:SetPoint("TOPLEFT", 10, -1 * (guildmadeFrameHeight + 5) * (index - 1))
         guildmate:SetBackdrop({
             bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
             edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -231,10 +256,10 @@ function IsPlayerInMPGOGroups(playerName)
     if not mpgogroupsFrame then return false end
 
     for i = 1, mpgogroupsFrame:GetNumChildren() do
-        local slot = select(i, mpgogroupsFrame:GetChildren())
-        if slot:GetChildren() then
-            local child = select(1, slot:GetChildren())
-            if child and child.text and child.text:GetText() == playerName then
+        local row = select(i, mpgogroupsFrame:GetChildren())
+        for j = 1, row:GetNumChildren() do
+            local guildmemberFrame = select(j, row:GetChildren())
+            if guildmemberFrame.text:GetText() == playerName then
                 return true
             end
         end
@@ -244,7 +269,7 @@ end
 
 -- CheckDropTarget: Checks if the frame is being dropped over a valid group slot.
 -- If so, attaches the frame to the slot and returns true. Otherwise, returns false.
-function CheckDropTarget(frame)
+function CheckDropTarget(guildmemberFrame)
     local mpgogroupsFrame = _G["MPGOGroupsFrame"]
     if mpgogroupsFrame then
         for i = 1, mpgogroupsFrame:GetNumChildren() do
@@ -252,18 +277,26 @@ function CheckDropTarget(frame)
             if MouseIsOver(row) then
                 print("Mouse is over row " .. i)
                 row:GetScript("OnReceiveDrag")(row)
-                frame:ClearAllPoints()
+                guildmemberFrame:ClearAllPoints()
                 local numChildren = row:GetNumChildren()
-                local totalWidth = row:GetWidth()
-                local widthForChild = totalWidth / 5
                 local margin = 10
-                if numChildren == 0 then
-                    frame:SetPoint("LEFT", row, "LEFT", margin, 0)
-                else
-                    frame:SetPoint("LEFT", row, "LEFT", widthForChild + margin * numChildren, 0)
+                local totalWidth = row:GetWidth() - (margin * 2)
+                local widthForChild = totalWidth * 0.2 -- Set width to 20% of row width
+                if numChildren == 1 then
+                    guildmemberFrame:SetPoint("LEFT", row, "LEFT", margin, 0)
+                    print("First child in row, setting left to " .. margin)
+                    CreateNewRowOfMPGOGroups() -- Create a new row since we always want an empty row
+                elseif numChildren < 5 then
+                    local left = (numChildren - 1) * widthForChild
+                    print("Setting left to " .. left .. " numChildren: " .. numChildren)
+                    guildmemberFrame:SetPoint("LEFT", row, "LEFT", left, 0)
+                elseif numChildren == 5 then
+                    -- here we will reject the move and put it back in the guildmember list
+                    print("Row is full, rejecting move")
                 end
-                frame:SetParent(row)
-                frame:Show()
+                guildmemberFrame:SetWidth(widthForChild) -- Set guild member frame width to 20% of row width
+                guildmemberFrame:SetParent(row)
+                guildmemberFrame:Show()
                 return true
             end
         end
@@ -312,7 +345,7 @@ function CreateNewRowOfMPGOGroups()
     print("Created row " .. rowNumber)
     newRow:SetSize(500, 50)
     if rowNumber == 1 then
-        newRow:SetPoint("TOPLEFT", mpgogroupsFrame, "TOPLEFT", 0, -10) -- Start at the top with an offset of 10
+        newRow:SetPoint("TOPLEFT", mpgogroupsFrame, "TOPLEFT", 10, -10) -- Start at the top with an offset of 10
     else
         newRow:SetPoint("TOPLEFT", _G["Row" .. (rowNumber - 1)], "BOTTOMLEFT", 0, -10) -- Position below the previous row with an offset of 10
     end
@@ -337,11 +370,6 @@ function CreateNewRowOfMPGOGroups()
             print("Setting Parent to " .. self:GetName())
             frame:SetParent(self)
             print("Parent set to " .. frame:GetParent():GetName())
-            -- frame:ClearAllPoints()
-            -- frame:SetPoint("LEFT", self, "LEFT", spacing * numChildren, 0)
-            -- print("Set point to " .. frame:GetPoint(1))
-            -- frame:Show() -- Ensure the frame is visible
-            -- print("Frame shown: " .. tostring(frame:IsShown()))
             addonTable.draggedFrame = nil
         else
             print("No dragged frame found")
