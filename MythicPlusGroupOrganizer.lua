@@ -11,6 +11,7 @@ local addonName, addonTable = ...
 RaiderIO = RaiderIO
 
 -- configs
+local MPGOIsDebugMode = false
 local horizontalMargin = 10
 
 MPGOColorsQuality = {
@@ -46,7 +47,7 @@ frame:RegisterEvent("GUILD_ROSTER_UPDATE")
 
 frame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == addonName then
-        print(addonName .. " loaded!")
+        MPGODebug(addonName .. " loaded!")
         -- Initialize your addon here
         InitializeFrames()
         RegisterSlashCommand()
@@ -154,20 +155,29 @@ function InitializeFrames()
 
         if announceButton then
             announceButton:SetScript("OnClick", function()
-                print("Announce button clicked")
+                MPGODebug("Announce clicked")
                 MPGOPrintGroupMembers()
             end)
         end
 
         if button2 then
             button2:SetScript("OnClick", function()
-                print("Button 2 clicked")
+                if (MPGOIsDebugMode) then
+                    MPGOIsDebugMode = false
+                    button2:SetText("Disable Debug Mode")
+                    print("Debug mode disabled")
+                else
+                    MPGOIsDebugMode = true
+                    button2:SetText("Enable Debug Mode")
+                    print("Debug mode enabled")
+                end
             end)
         end
 
         if button3 then
             button3:SetScript("OnClick", function()
-                print("Button 3 clicked")
+                MPGODebug("Reset All clicked")
+                ResetGuildMemberFrames()
             end)
         end
     end
@@ -219,7 +229,7 @@ function PopulateGuildmatesList()
     local scrollChild = _G["GuildmatesScrollChildFrame"]
     if not scrollChild then return end
     if _G["MythicPlusGroupOrganizerFrame"]:IsShown() then
-        print("Populating guildmates list")
+        MPGODebug("Populating guildmates list")
     end
     -- Clear previous children
     for i = 1, scrollChild:GetNumChildren() do
@@ -264,7 +274,8 @@ function PopulateGuildmatesList()
     local index = 1
     for _, guildmateInfo in ipairs(guildmates) do
         local guildmate = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-        local guildmadeFrameHeight = 40
+        local guildmadeFrameHeight = 20
+        local guildmadeFrameOpacity = 0.5
         guildmate:SetSize(scrollChild:GetWidth() - 20, guildmadeFrameHeight)
         guildmate:SetPoint("TOPLEFT", 10, -1 * (guildmadeFrameHeight + 5) * (index - 1))
         -- guildmate:SetBackdrop({
@@ -276,7 +287,7 @@ function PopulateGuildmatesList()
         guildmate.texture:SetAllPoints()
         guildmate.mythicPlusRating = GetPlayerMythicPlusRating(guildmateInfo.name)
         local red, green, blue = MPGOGetPlayerIOColor(guildmate.mythicPlusRating)
-        guildmate.texture:SetColorTexture(red, green, blue, 0.5) -- Set black background with 50% opacity
+        guildmate.texture:SetColorTexture(red, green, blue, guildmadeFrameOpacity) -- Set black background with 50% opacity
 
         local roleIcon = guildmate:CreateTexture(nil, "OVERLAY")
         roleIcon:SetSize(16, 16)
@@ -304,7 +315,7 @@ function PopulateGuildmatesList()
             self.originalFrameStrata = self:GetFrameStrata() -- Store the original frame strata
             self:SetFrameStrata("HIGH")                      -- Set frame strata to HIGH to appear on top
             addonTable.draggedFrame = self                   -- Store the dragged frame in the addonTable
-            print("Drag started for " .. self.text:GetText())
+            MPGODebug("Drag started for " .. self.text:GetText())
         end)
         guildmate:SetScript("OnDragStop", function(self)
             self:StopMovingOrSizing()
@@ -316,21 +327,21 @@ function PopulateGuildmatesList()
                 local widthForChild = totalWidth * 0.2 -- Set width to 20% of row width
                 if numChildren == 0 then
                     self:SetPoint("LEFT", dropTarget, "LEFT", horizontalMargin, 0)
-                    print("First child in row, setting left to " .. horizontalMargin)
+                    MPGODebug("First child in row, setting left to " .. horizontalMargin)
                     CreateNewRowOfMPGOGroups() -- Create a new row since we always want an empty row
                 elseif numChildren < 5 then
                     local left = (numChildren * widthForChild) + horizontalMargin
-                    print("Setting left to " .. left .. " numChildren: " .. numChildren)
+                    MPGODebug("Setting left to " .. left .. " numChildren: " .. numChildren)
                     self:SetPoint("LEFT", dropTarget, "LEFT", left, 0)
                 elseif numChildren == 5 then
                     -- here we will reject the move and put it back in the guildmember list
-                    print("Row is full, rejecting move")
+                    MPGODebug("Row is full, rejecting move")
                 end
                 self:SetWidth(widthForChild) -- Set guild member frame width to 20% of row width
                 self:SetParent(dropTarget)
                 self:Show()
                 C_GuildInfo.GuildRoster()
-                print("Dropped on row " .. dropTarget:GetID())
+                MPGODebug("Dropped on row " .. dropTarget:GetID())
             else
                 self:SetParent(self.originalParent) -- Revert to original parent if not dropped on a group slot
                 self:ClearAllPoints()
@@ -338,7 +349,7 @@ function PopulateGuildmatesList()
             end
             self:SetFrameStrata(self.originalFrameStrata)
             -- addonTable.draggedFrame = nil -- Clear the dragged frame
-            print("Drag stopped for " .. self.text:GetText())
+            MPGODebug("Drag stopped for " .. self.text:GetText())
         end)
         guildmate.role = guildmateInfo.role -- Attach the role as a data attribute
         index = index + 1
@@ -371,12 +382,12 @@ function CheckDropTarget(guildmemberFrame)
         for i = 1, mpgogroupsFrame:GetNumChildren() do
             local row = select(i, mpgogroupsFrame:GetChildren())
             if MouseIsOver(row) then
-                print("Mouse is over row " .. i)
+                MPGODebug("Mouse is over row " .. i)
                 return true, row
             end
         end
     end
-    print("No valid drop target found")
+    MPGODebug("No valid drop target found")
     return false, nil
 end
 
@@ -413,12 +424,20 @@ function CreateNewRowOfMPGOGroups()
     local mpgogroupsFrame = _G["MPGOGroupsFrame"]
     if not mpgogroupsFrame then return end
 
+    -- Check if there are any rows with zero children
+    for i = 1, mpgogroupsFrame:GetNumChildren() do
+        local row = select(i, mpgogroupsFrame:GetChildren())
+        if row:GetNumChildren() == 0 then
+            return -- Exit the function if a row with zero children is found
+        end
+    end
+
     local numRows = mpgogroupsFrame:GetNumChildren()
     local rowNumber = numRows + 1
 
     local newRow = CreateFrame("Frame", "Row" .. rowNumber, mpgogroupsFrame, "BackdropTemplate")
-    print("Created row " .. rowNumber)
-    newRow:SetSize(500, 50)
+    MPGODebug("Created row " .. rowNumber)
+    newRow:SetSize(mpgogroupsFrame:GetWidth() - 20, 50) -- Adjust width to match MPGOGroupsFrame width with 10 margin on each side
     if rowNumber == 1 then
         newRow:SetPoint("TOPLEFT", mpgogroupsFrame, "TOPLEFT", 10, -10)                -- Start at the top with an offset of 10
     else
@@ -492,18 +511,18 @@ end
 -- GetPlayerMythicPlusRating: Retrieves the player's Mythic Plus rating from the RaiderIO addon.
 function GetPlayerMythicPlusRating(playerNameAndRealm)
     if not RaiderIO then
-        print("RaiderIO addon is not installed.")
+        MPGODebug("RaiderIO addon is not installed.")
         return 0
     end
 
     local playerName, realm = strsplit("-", playerNameAndRealm)
-    print("Getting RaiderIO profile for " .. playerName .. " on realm " .. realm)
+    MPGODebug("Getting RaiderIO profile for " .. playerName .. " on realm " .. realm)
 
     local profile = RaiderIO.GetProfile(playerName, realm)
     if profile then
         return profile.mythicKeystoneProfile.currentScore or 0
     else
-        print("No RaiderIO profile found for " .. playerName)
+        MPGODebug("No RaiderIO profile found for " .. playerName)
         return 0
     end
 end
@@ -550,4 +569,28 @@ function MPGOGetQualityColorByIO(io)
         color = MPGOColorsQuality["Common"]
     end
     return color
+end
+
+function MPGODebug(msg)
+    if MPGOIsDebugMode then
+        print(msg)
+    end
+end
+
+function ResetGuildMemberFrames()
+    local mpgogroupsFrame = _G["MPGOGroupsFrame"]
+    local mpgoGuildmatesScrollChildFrame = _G["GuildmatesScrollChildFrame"]
+    if not mpgogroupsFrame then return end
+
+    -- Remove all guild member frames from rows
+    for i = 1, mpgogroupsFrame:GetNumChildren() do
+        local row = select(i, mpgogroupsFrame:GetChildren())
+        for j = 1, row:GetNumChildren() do
+            local guildmemberFrame = select(j, row:GetChildren())
+            guildmemberFrame:SetParent(mpgoGuildmatesScrollChildFrame)
+        end
+    end
+
+    -- Repopulate the guild list frame
+    PopulateGuildmatesList()
 end
