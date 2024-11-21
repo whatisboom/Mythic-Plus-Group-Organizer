@@ -237,13 +237,14 @@ function PopulateGuildmatesList()
         local guildmadeFrameHeight = 40
         guildmate:SetSize(scrollChild:GetWidth() - 20, guildmadeFrameHeight)
         guildmate:SetPoint("TOPLEFT", 10, -1 * (guildmadeFrameHeight + 5) * (index - 1))
-        guildmate:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = true, tileSize = 16, edgeSize = 16,
-            insets = { left = 4, right = 4, top = 4, bottom = 4 }
-        })
-        guildmate:SetBackdropColor(1, 0, 0, 0.5) -- Set red background with 50% opacity
+        -- guildmate:SetBackdrop({
+        --     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        --     tile = true, tileSize = 16, edgeSize = 16,
+        --     insets = { left = 4, right = 4, top = 4, bottom = 4 }
+        -- })
+        guildmate.texture = guildmate:CreateTexture()
+        guildmate.texture:SetAllPoints()
+        guildmate.texture:SetColorTexture(0, 0, 0, 0.5) -- Set black background with 50% opacity
 
         local roleIcon = guildmate:CreateTexture(nil, "OVERLAY")
         roleIcon:SetSize(16, 16)
