@@ -556,8 +556,7 @@ function GetPlayerMythicPlusRole(playerNameAndRealm)
     MPGODebug("Getting RaiderIO role for " .. playerName .. " on realm " .. realm, MPGODebugLevels.Info)
 
     local profile = RaiderIO.GetProfile(playerName, realm)
-    if profile then
-        MPGODebug("Profile for " .. playerName .. " found", MPGODebugLevels.Info)
+    if profile and profile.mythicKeystoneProfile and profile.mythicKeystoneProfile.mplusCurrent and profile.mythicKeystoneProfile.mplusCurrent.roles and profile.mythicKeystoneProfile.mplusCurrent.roles[1] then
         local role = string.upper(profile.mythicKeystoneProfile.mplusCurrent.roles[1][1]) or "DPS"
         MPGODebug("Role for " .. playerName .. ": " .. role, MPGODebugLevels.Info)
         return role
@@ -612,8 +611,8 @@ function MPGOGetQualityColorByIO(io)
 end
 
 function MPGODebug( msg, level)
-
-    if MPGOIsDebugMode and level >= MPGODebugLevel or level == MPGODebugLevels.Critical or not level then
+    level = level or MPGODebugLevels.Critical
+    if MPGOIsDebugMode and level >= MPGODebugLevel or level == MPGODebugLevels.Critical then
         local DebugColors = {
             [0] = {1, 1, 1},    -- White
             [1] = {1, 1, 0},    -- Yellow
