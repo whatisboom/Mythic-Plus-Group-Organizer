@@ -53,6 +53,40 @@
                     </OnClick>
                 </Scripts>
             </Button>
+            <Frame name="PlaceholderButtonsFrame" inherits="BackdropTemplate">
+                <Size>
+                    <AbsDimension x="400" y="50"/>
+                </Size>
+                <Anchors>
+                    <Anchor point="TOP" relativeTo="MythicPlusGroupOrganizerFrame" relativePoint="BOTTOM" x="0" y="0"/>
+                </Anchors>
+                <Frames>
+                    <Button name="MPGOAnnounceButton" inherits="UIPanelButtonTemplate" text="Announce">
+                        <Size>
+                            <AbsDimension x="100" y="30"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="LEFT" x="10" y="0"/>
+                        </Anchors>
+                    </Button>
+                    <Button name="PlaceholderButton2" inherits="UIPanelButtonTemplate" text="Two">
+                        <Size>
+                            <AbsDimension x="100" y="30"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="CENTER" x="0" y="0"/>
+                        </Anchors>
+                    </Button>
+                    <Button name="PlaceholderButton3" inherits="UIPanelButtonTemplate" text="Three">
+                        <Size>
+                            <AbsDimension x="100" y="30"/>
+                        </Size>
+                        <Anchors>
+                            <Anchor point="RIGHT" x="-10" y="0"/>
+                        </Anchors>
+                    </Button>
+                </Frames>
+            </Frame>
         </Frames>
     </Frame>
 </Ui>

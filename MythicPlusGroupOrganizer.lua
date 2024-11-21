@@ -108,6 +108,38 @@ function InitializeFrames()
         })
         CreateNewRowOfMPGOGroups() -- Ensure there is always an empty row at the bottom
     end
+
+    local placeholderButtonsFrame = _G["PlaceholderButtonsFrame"]
+    if placeholderButtonsFrame then
+        placeholderButtonsFrame:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            tile = true, tileSize = 32,
+            insets = { left = 11, right = 12, top = 12, bottom = 11 }
+        })
+
+        local announceButton = _G["MPGOAnnounceButton"]
+        local button2 = _G["PlaceholderButton2"]
+        local button3 = _G["PlaceholderButton3"]
+
+        if announceButton then
+            announceButton:SetScript("OnClick", function()
+                print("Announce button clicked")
+                MPGOPrintGroupMembers()
+            end)
+        end
+
+        if button2 then
+            button2:SetScript("OnClick", function()
+                print("Button 2 clicked")
+            end)
+        end
+
+        if button3 then
+            button3:SetScript("OnClick", function()
+                print("Button 3 clicked")
+            end)
+        end
+    end
 end
 
 function AdjustGuildmatesListFrameSize()
@@ -360,15 +392,20 @@ function CreateNewRowOfMPGOGroups()
     newRow:Show()
 end
 
--- PrintGroupMembers: Iterates over the group rows and prints the names of each guild member in that row.
-function PrintGroupMembers()
+-- MPGOPrintGroupMembers: Iterates over the group rows and prints the names of each guild member in that row.
+function MPGOPrintGroupMembers()
     local mpgogroupsFrame = _G["MPGOGroupsFrame"]
     if not mpgogroupsFrame then return end
 
     for i = 1, mpgogroupsFrame:GetNumChildren() do
         local row = select(i, mpgogroupsFrame:GetChildren())
+        local numChildren = row:GetNumChildren()
+        if numChildren == 0 then
+            break
+        end
+        
         local groupText = "Group " .. i .. ":"
-        for j = 1, row:GetNumChildren() do
+        for j = 1, numChildren do
             local guildmemberFrame = select(j, row:GetChildren())
             groupText = groupText .. "  " .. guildmemberFrame.text:GetText()
         end
