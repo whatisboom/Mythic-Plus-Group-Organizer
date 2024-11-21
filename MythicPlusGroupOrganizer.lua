@@ -300,27 +300,6 @@ function CheckDropTarget(guildmemberFrame)
             local row = select(i, mpgogroupsFrame:GetChildren())
             if MouseIsOver(row) then
                 print("Mouse is over row " .. i)
-                -- row:GetScript("OnReceiveDrag")(row)
-                -- guildmemberFrame:ClearAllPoints()
-                -- local numChildren = row:GetNumChildren()
-                -- local margin = 10
-                -- local totalWidth = row:GetWidth() - (margin * 2)
-                -- local widthForChild = totalWidth * 0.2 -- Set width to 20% of row width
-                -- if numChildren == 0 then
-                --     guildmemberFrame:SetPoint("LEFT", row, "LEFT", margin, 0)
-                --     print("First child in row, setting left to " .. margin)
-                --     CreateNewRowOfMPGOGroups() -- Create a new row since we always want an empty row
-                -- elseif numChildren < 5 then
-                --     local left = (numChildren - 1) * widthForChild
-                --     print("Setting left to " .. left .. " numChildren: " .. numChildren)
-                --     guildmemberFrame:SetPoint("LEFT", row, "LEFT", left, 0)
-                -- elseif numChildren == 5 then
-                --     -- here we will reject the move and put it back in the guildmember list
-                --     print("Row is full, rejecting move")
-                -- end
-                -- guildmemberFrame:SetWidth(widthForChild) -- Set guild member frame width to 20% of row width
-                -- guildmemberFrame:SetParent(row)
-                -- guildmemberFrame:Show()
                 return true, row
             end
         end
@@ -379,26 +358,6 @@ function CreateNewRowOfMPGOGroups()
         insets = { left = 11, right = 12, top = 12, bottom = 11 }
     })
     newRow:Show()
-
-    -- newRow:SetScript("OnReceiveDrag", function(self)
-    --     print("OnReceiveDrag called for " .. self:GetName() .. " on row " .. rowNumber)
-    --     local numChildren = self:GetNumChildren()
-    --     print("Num children: " .. numChildren)
-    --     local totalWidth = self:GetWidth()
-    --     print("Total width: " .. totalWidth)
-    --     local spacing = (totalWidth - (numChildren * 10)) / (numChildren + 1) 
-    --     print("Spacing: " .. spacing)
-    --     local frame = addonTable.draggedFrame
-    --     if frame then
-    --         print("Dragged frame: " .. frame.text:GetText())
-    --         print("Setting Parent to " .. self:GetName())
-    --         -- frame:SetParent(self)
-    --         -- print("Parent set to " .. frame:GetParent():GetName())
-    --         -- addonTable.draggedFrame = nil
-    --     else
-    --         print("No dragged frame found")
-    --     end
-    -- end)
 end
 
 -- RegisterSlashCommand: Registers a slash command to show or hide the main frame.
