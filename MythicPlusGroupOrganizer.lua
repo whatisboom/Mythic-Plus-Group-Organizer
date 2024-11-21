@@ -254,10 +254,10 @@ function PopulateGuildmembersList()
     local guildmates = {}
 
     for i = 1, numGuildMembers do
-        local name, _, _, level, _, _, _, _, online = GetGuildRosterInfo(i)
+        local name, _, _, level, class, _, _, _, online = GetGuildRosterInfo(i)
         if online and level == maxLevel and not IsPlayerInMPGOGroups(name) then
             local role = GetPlayerRole(name)
-            table.insert(guildmates, { name = name, role = role })
+            table.insert(guildmates, { name = name, role = role, class = class })
         end
     end
 
@@ -298,8 +298,13 @@ function PopulateGuildmembersList()
         guildmate.texture = guildmate:CreateTexture()
         guildmate.texture:SetAllPoints()
         guildmate.mythicPlusRating = GetPlayerMythicPlusRating(guildmateInfo.name)
-        local red, green, blue = MPGOGetPlayerIOColor(guildmate.mythicPlusRating)
-        guildmate.texture:SetColorTexture(red, green, blue, guildmadeFrameOpacity) -- Set black background with 50% opacity
+        local useClassAsBackground = true
+        local classColor = MPGOColorsClasses[guildmateInfo.class]
+        local qualityColor = MPGOGetPlayerIOColor(guildmate.mythicPlusRating)
+        local backgroundColor = useClassAsBackground and classColor or qualityColor
+        local scoreColor = useClassAsBackground and qualityColor or classColor
+
+        guildmate.texture:SetColorTexture(backgroundColor.red, backgroundColor.green, backgroundColor.blue, guildmadeFrameOpacity) -- Set black background with 50% opacity
 
         local roleIcon = guildmate:CreateTexture(nil, "OVERLAY")
         roleIcon:SetSize(16, 16)
@@ -315,7 +320,8 @@ function PopulateGuildmembersList()
         guildmate.score = guildmate:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         guildmate.score:SetPoint("RIGHT", guildmate, "RIGHT", -5, 0)
         guildmate.score:SetText(tostring(guildmate.mythicPlusRating))
-
+        
+        guildmate.score:SetTextColor(scoreColor.red, scoreColor.green, scoreColor.blue) -- Set text color to match background color
         guildmate:EnableMouse(true)
         guildmate:SetMovable(true)
         guildmate:RegisterForDrag("LeftButton")
@@ -544,7 +550,7 @@ function MPGOLerpColors(amount, color1, color2)
     local red = MPGOLerpColor(amount, color1.red, color2.red)
     local green = MPGOLerpColor(amount, color1.green, color2.green)
     local blue = MPGOLerpColor(amount, color1.blue, color2.blue)
-    return red, green, blue
+    return { red = red, green = green, blue = blue }
 end
 
 function MPGOLerpColor(amount, color1, color2)
