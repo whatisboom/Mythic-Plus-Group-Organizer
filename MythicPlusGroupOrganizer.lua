@@ -360,6 +360,22 @@ function CreateNewRowOfMPGOGroups()
     newRow:Show()
 end
 
+-- PrintGroupMembers: Iterates over the group rows and prints the names of each guild member in that row.
+function PrintGroupMembers()
+    local mpgogroupsFrame = _G["MPGOGroupsFrame"]
+    if not mpgogroupsFrame then return end
+
+    for i = 1, mpgogroupsFrame:GetNumChildren() do
+        local row = select(i, mpgogroupsFrame:GetChildren())
+        local groupText = "Group " .. i .. ":"
+        for j = 1, row:GetNumChildren() do
+            local guildmemberFrame = select(j, row:GetChildren())
+            groupText = groupText .. "  " .. guildmemberFrame.text:GetText()
+        end
+        print(groupText)
+    end
+end
+
 -- RegisterSlashCommand: Registers a slash command to show or hide the main frame.
 function RegisterSlashCommand()
     SLASH_MYTHICPLUSGROUPORGANIZER1 = "/mpgo"
