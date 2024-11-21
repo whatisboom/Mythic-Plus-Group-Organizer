@@ -83,11 +83,11 @@ function InitializeFrames()
 
     local guildmatesListFrame = _G["GuildmatesListFrame"]
     if guildmatesListFrame then
-        guildmatesListFrame:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            tile = true, tileSize = 32,
-            insets = { left = 11, right = 12, top = 12, bottom = 11 }
-        })
+        -- guildmatesListFrame:SetBackdrop({
+        --     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        --     tile = true, tileSize = 32,
+        --     insets = { left = 11, right = 12, top = 12, bottom = 11 }
+        -- })
 
         -- Create ScrollFrame and ScrollChild
         local scrollFrame = CreateFrame("ScrollFrame", "GuildmatesScrollFrame", guildmatesListFrame, "UIPanelScrollFrameTemplate")
@@ -101,11 +101,11 @@ function InitializeFrames()
 
     local mpgogroupsFrame = _G["MPGOGroupsFrame"]
     if mpgogroupsFrame then
-        mpgogroupsFrame:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            tile = true, tileSize = 32,
-            insets = { left = 11, right = 12, top = 12, bottom = 11 }
-        })
+        -- mpgogroupsFrame:SetBackdrop({
+        --     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        --     tile = true, tileSize = 32,
+        --     insets = { left = 11, right = 12, top = 12, bottom = 11 }
+        -- })
         CreateNewRowOfMPGOGroups() -- Ensure there is always an empty row at the bottom
     end
 
@@ -160,7 +160,7 @@ function AdjustGuildmatesListFrameSize()
             row:SetWidth(mpgogroupsFrame:GetWidth() - 20) -- Set row width with a margin of 10 on each side
             for j = 1, row:GetNumChildren() do
                 local guildmemberFrame = select(j, row:GetChildren())
-                local left = row:GetWidth() * 0.2
+                local left = (row:GetWidth() * 0.2) - (horizontalMargin * 0.5) -- Set width to 20% of row width
                 guildmemberFrame:SetWidth(left) -- Set guild member frame width to 20% of row width
                 guildmemberFrame:SetPoint("LEFT", row, "LEFT", left * (j-1) + horizontalMargin, 0) -- Align guild member frame to the left of the row
             end
@@ -291,6 +291,8 @@ function PopulateGuildmatesList()
                 self:SetWidth(widthForChild) -- Set guild member frame width to 20% of row width
                 self:SetParent(dropTarget)
                 self:Show()
+                C_GuildInfo.GuildRoster()
+                print("Dropped on row " .. dropTarget:GetID())
             else
                 self:SetParent(self.originalParent) -- Revert to original parent if not dropped on a group slot
                 self:ClearAllPoints()
