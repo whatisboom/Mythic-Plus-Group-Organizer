@@ -166,18 +166,13 @@ function InitializeFrames()
                 MPGOPrintGroupMembers()
             end)
         end
+        button2:SetText(MPGOIsDebugMode and "Disable Debug Mode" or "Enable Debug Mode")
 
         if button2 then
             button2:SetScript("OnClick", function()
-                if (MPGOIsDebugMode) then
-                    MPGOIsDebugMode = false
-                    button2:SetText("Disable Debug Mode")
-                    print("Debug mode disabled")
-                else
-                    MPGOIsDebugMode = true
-                    button2:SetText("Enable Debug Mode")
-                    print("Debug mode enabled")
-                end
+                MPGOIsDebugMode = not MPGOIsDebugMode
+                button2:SetText(MPGOIsDebugMode and "Disable Debug Mode" or "Enable Debug Mode")
+                MPGODebug("Debug mode " .. (MPGOIsDebugMode and "enabled" or "disabled"), MPGODebugLevels.Critical)
             end)
         end
 
@@ -599,9 +594,8 @@ function MPGODebug( msg, level)
             [2] = {1, 0.5, 0},  -- Orange
             [3] = {1, 0, 0}     -- Red
         }
-        local color = DebugColors[level] or {1, 0, 0}  -- Default to white if level is not found
-        local r, g, b = color[1], color[2], color[3]
-        DEFAULT_CHAT_FRAME:AddMessage(msg, r or 1, g or 1, b or 0)
+        local color = DebugColors[level] or {1, 0, 0}  -- Default to red if level is not found
+        DEFAULT_CHAT_FRAME:AddMessage(msg, color[1], color[2], color[3])
     end
 end
 
